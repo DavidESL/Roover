@@ -2,3 +2,4 @@ Para el time of flight existen 2 formas de programarlo segun la libreria, Adafru
 Adafruit es la forma sencilla, con esto puede funcionar sencillo como un sensor ultrasonico
 Con Pololu uno puede modificar entre si quiere cambiar de modos o de acercamientos, digamos que es mas completo y libre:
 " For instance, you can switch between long or short range mode, and between slow or fast mode. "
+Ambas requieren instalar sus respectivas librerias y estar conectadas por I2C
