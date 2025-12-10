@@ -1,0 +1,30 @@
+#include "Wire.h"
+#include "VL53L0X.h"
+
+VL53L0X sensor;
+
+void sensor_init(bool long_range, bool high_speed) {
+  Wire.begin();
+  sensor.setTimeout(500);
+  sensor.init();
+  if (long_range) {
+    sensor.setSignalRateLimit(0.1);
+    sensor.setVcselPulsePeriod(VL53L0X::VcselPeriodPreRange, 18);
+    sensor.setVcselPulsePeriod(VL53L0X::VcselPeriodFinalRange, 14);
+  }
+  int budget = high_speed ? 20000 : 200000;
+  sensor.setMeasurementTimingBudget(budget);
+}
+
+int get_distance() {
+  return sensor.readRangeSingleMillimeters();
+}
+
+void setup() {
+  Serial.begin(9600);
+  sensor_init(true, false);
+}
+
+void loop() {
+  Serial.println(get_distance());
+}
