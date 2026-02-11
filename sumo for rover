@@ -1,0 +1,133 @@
+#include <Arduino.h>
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
+#include <freertos/semphr.h>
+
+// -------------------- PINES --------------------
+#define MOTOR_IN1 4
+#define MOTOR_OUT1 15
+#define MOTOR_IN2 14
+#define MOTOR_OUT2 13
+#define SEN1 5
+#define SEN2 18
+#define SEN3 19
+#define ENA 22
+#define ENB 23
+
+// -------------------- VARIABLES --------------------
+volatile int sread1 = 0;
+volatile int sread2 = 0;
+volatile int sread3 = 0;
+
+SemaphoreHandle_t xMotorSemaphore;
+
+// -------------------- PROTOTIPOS --------------------
+void taskControlMotor(void *pvParameters);
+void taskRGB(void *pvParameters);
+
+// -------------------- FUNCIONES DE MOVIMIENTO --------------------
+void adelante() {
+  digitalWrite(MOTOR_IN1, LOW);
+  digitalWrite(MOTOR_OUT1, HIGH);
+  digitalWrite(MOTOR_IN2, LOW);
+  digitalWrite(MOTOR_OUT2, HIGH);
+  analogWrite(ENA, 128);
+  analogWrite(ENB, 128);
+}
+
+void atras() {
+  digitalWrite(MOTOR_IN1, HIGH);
+  digitalWrite(MOTOR_OUT1, LOW);
+  digitalWrite(MOTOR_IN2, HIGH);
+  digitalWrite(MOTOR_OUT2, LOW);
+  analogWrite(ENA, 128);
+  analogWrite(ENB, 128);
+}
+
+void vuelta() {
+  digitalWrite(MOTOR_IN1, HIGH);
+  digitalWrite(MOTOR_OUT1, LOW);
+  digitalWrite(MOTOR_IN2, LOW);
+  digitalWrite(MOTOR_OUT2, HIGH);
+  analogWrite(ENA, 130);
+  analogWrite(ENB, 200);
+}
+
+// -------------------- SETUP --------------------
+void setup() {
+
+  pinMode(MOTOR_IN1, OUTPUT);
+  pinMode(MOTOR_OUT1, OUTPUT);
+  pinMode(MOTOR_IN2, OUTPUT);
+  pinMode(MOTOR_OUT2, OUTPUT);
+  pinMode(ENA, OUTPUT);
+  pinMode(ENB, OUTPUT);
+
+  pinMode(SEN1, INPUT);
+  pinMode(SEN2, INPUT);
+  pinMode(SEN3, INPUT);
+
+  xMotorSemaphore = xSemaphoreCreateMutex();
+
+  // Tarea sensores de línea 
+  xTaskCreate(taskControlMotor, "ControlMotor", 5000, NULL, 2, NULL);
+
+  // Tarea futura RGB 
+  xTaskCreate(taskRGB, "ControlRGB", 5000, NULL, 1, NULL);
+
+  delay(2000);
+}
+
+void loop() {
+  vTaskDelay(portMAX_DELAY);
+}
+
+// -------------------- TAREA 1: CONTROL DE LINEA --------------------
+void taskControlMotor(void *pvParameters) {
+
+  while (1) {
+
+    sread1 = digitalRead(SEN1);
+    sread2 = digitalRead(SEN2);
+    sread3 = digitalRead(SEN3);
+
+
+    if (sread1 == 1) {
+
+      if (xSemaphoreTake(xMotorSemaphore, pdMS_TO_TICKS(100)) == pdTRUE) {
+        atras();
+        xSemaphoreGive(xMotorSemaphore);
+      }
+
+      vTaskDelay(pdMS_TO_TICKS(300));
+
+      if (xSemaphoreTake(xMotorSemaphore, pdMS_TO_TICKS(100)) == pdTRUE) {
+        vuelta();
+        xSemaphoreGive(xMotorSemaphore);
+      }
+
+      vTaskDelay(pdMS_TO_TICKS(600));
+    }
+    else {
+      if (xSemaphoreTake(xMotorSemaphore, pdMS_TO_TICKS(10)) == pdTRUE) {
+        adelante();
+        xSemaphoreGive(xMotorSemaphore);
+      }
+    }
+
+    vTaskDelay(pdMS_TO_TICKS(20));
+  }
+}
+
+// -------------------- TAREA 2: DETECCION RGB (FUTURA) --------------------
+void taskRGB(void *pvParameters) {
+
+  while (1) {
+
+    // =========================================
+    // Aqui va la tarea de deteccion RGB
+    // =========================================
+
+    vTaskDelay(pdMS_TO_TICKS(50));
+  }
+}
