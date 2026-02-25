@@ -1,0 +1,43 @@
+#include <Wire.h>
+#include <VL53L0X.h>
+
+VL53L0X sensor;
+
+#define MOTOR_PIN 5 // PWM para motor
+int velocidad = 0;  // variable para velocidad
+
+void setup() {
+  Serial.begin(9600);
+  Wire.begin();
+
+  // VL53L0X
+  sensor.init();
+  sensor.startContinuous(0); // continuo
+
+  // Motor
+  pinMode(MOTOR_PIN, OUTPUT);
+}
+
+void loop() {
+  int distancia = sensor.readRangeContinuousMillimeters();
+
+  // Ver si la lectura es válida
+  if(sensor.timeoutOccurred() == false) {
+    Serial.print("Distancia: ");
+    Serial.println(distancia);
+
+    // 📌 CONTROL DE VELOCIDAD: mientras más cerca, más lento
+    // rango ejemplo: 50mm a 500mm
+    distancia = constrain(distancia, 50, 500); //constrain(x, a, b) = x = valor original, a = min, b = max, si x se sale corrige
+    velocidad = map(distancia, 50, 500, 0, 255);
+    //map(x, in_min, in_max, out_min, out_max), funciona como un cambio de escala
+    //pasara una distancia aproximada a un valor de velocidad
+
+    analogWrite(MOTOR_PIN, velocidad);
+    Serial.print("Velocidad: ");
+    Serial.println(velocidad);
+
+    delay(2000);
+
+  }
+}
