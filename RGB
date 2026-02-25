@@ -1,0 +1,75 @@
+// Pines definidos por ti
+#define S0 4
+#define S1 5
+#define S2 6
+#define S3 7
+#define OUT 13
+
+int red = 0;
+int green = 0;
+int blue = 0;
+
+float Rn, Gn, Bn;
+
+void setup() {
+  Serial.begin(9600);
+
+  pinMode(S0, OUTPUT);
+  pinMode(S1, OUTPUT);
+  pinMode(S2, OUTPUT);
+  pinMode(S3, OUTPUT);
+  pinMode(OUT, INPUT);
+
+  // Escalado de frecuencia 20%
+  digitalWrite(S0, HIGH);
+  digitalWrite(S1, LOW);
+
+  Serial.println("TCS3200 Normalizado");
+}
+
+int leerColor(bool s2, bool s3) {
+  digitalWrite(S2, s2);
+  digitalWrite(S3, s3);
+  delay(100);
+  return pulseIn(OUT, LOW);
+}
+
+void loop() {
+
+  // 🔴 ROJO
+  red = leerColor(LOW, LOW);
+
+  // 🔵 AZUL
+  blue = leerColor(LOW, HIGH);
+
+  // 🟢 VERDE
+  green = leerColor(HIGH, HIGH);
+
+  // 📊 Normalización
+  float sum = red + green + blue;
+
+  Rn = (red * 100.0) / sum;
+  Gn = (green * 100.0) / sum;
+  Bn = (blue * 100.0) / sum;
+
+  // 📟 Mostrar valores crudos
+  Serial.print("R: ");
+  Serial.print(red);
+  Serial.print(" G: ");
+  Serial.print(green);
+  Serial.print(" B: ");
+  Serial.print(blue);
+
+  Serial.print("   ||   ");
+
+  // 📟 Mostrar normalizados
+  Serial.print("Rn: ");
+  Serial.print(Rn);
+  Serial.print("%  Gn: ");
+  Serial.print(Gn);
+  Serial.print("%  Bn: ");
+  Serial.print(Bn);
+  Serial.println("%");
+
+  delay(500);
+}
