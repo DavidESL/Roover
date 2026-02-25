@@ -1,74 +1,23 @@
-#include <Arduino.h>
-#include <freertos/FreeRTOS.h>
-#include <freertos/task.h>
-#include <freertos/semphr.h>
+// L298N - sin ENABLE, máxima potencia
 
-// -------------------- PINES --------------------
-#define MOTOR_IN1 4
-#define MOTOR_OUT1 15
-#define MOTOR_IN2 14
-#define MOTOR_OUT2 13
-#define SEN1 5
-#define SEN2 18
-#define SEN3 19
-#define SEN4 21
-#define ENA 22
-#define ENB 23
-
-volatile int sread1 = 0;
-volatile int sread2 = 0;
-volatile int sread3 = 0;
-volatile int sread4 = 0;
-
-
-void adelante() {
-  digitalWrite(MOTOR_IN1, LOW);
-  digitalWrite(MOTOR_OUT1, HIGH);
-  digitalWrite(MOTOR_IN2, LOW);
-  digitalWrite(MOTOR_OUT2, HIGH);
-  analogWrite(ENA, 128);
-  analogWrite(ENB, 128);
-}
-
-void atras() {
-  digitalWrite(MOTOR_IN1, HIGH);
-  digitalWrite(MOTOR_OUT1, LOW);
-  digitalWrite(MOTOR_IN2, HIGH);
-  digitalWrite(MOTOR_OUT2, LOW);
-  analogWrite(ENA, 128);
-  analogWrite(ENB, 128);
-}
-
-void vuelta() {
-  digitalWrite(MOTOR_IN1, HIGH);
-  digitalWrite(MOTOR_OUT1, LOW);
-  digitalWrite(MOTOR_IN2, LOW);
-  digitalWrite(MOTOR_OUT2, HIGH);
-  analogWrite(ENA, 130);
-  analogWrite(ENB, 200);
-}
+const int IN1 = 8;
+const int IN2 = 9;
+const int IN3 = 10;
+const int IN4 = 11;
 
 void setup() {
+  pinMode(IN1, OUTPUT);
+  pinMode(IN2, OUTPUT);
+  pinMode(IN3, OUTPUT);
+  pinMode(IN4, OUTPUT);
 
-
-  pinMode(MOTOR_IN1, OUTPUT);
-  pinMode(MOTOR_OUT1, OUTPUT);
-  pinMode(MOTOR_IN2, OUTPUT);
-  pinMode(MOTOR_OUT2, OUTPUT);
-  pinMode(ENA, OUTPUT);
-  pinMode(ENB, OUTPUT);
-
-  pinMode(SEN1, INPUT);
-  pinMode(SEN2, INPUT);
-  pinMode(SEN3, INPUT);
-  pinMode(SEN4, INPUT);
-
+  // ADELANTE
+  digitalWrite(IN1, HIGH);
+  digitalWrite(IN2, LOW);
+  digitalWrite(IN3, HIGH);
+  digitalWrite(IN4, LOW);
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
-  adelante();
-  delay(5000);
-  //vuelta();
-  //delay(5000);
+  // Nada
 }
