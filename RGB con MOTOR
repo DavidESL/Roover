@@ -1,0 +1,121 @@
+// Pines definidos por ti
+#define S0 19
+#define S1 18
+#define S2 15
+#define S3 2
+#define OUT 4
+
+#define MOTOR_IN1 25
+#define MOTOR_OUT1 26
+#define MOTOR_IN2 12
+#define MOTOR_OUT2 13
+
+int red = 0;
+int green = 0;
+int blue = 0;
+
+float Rn, Gn, Bn;
+
+void adelante() {
+  digitalWrite(MOTOR_IN1, HIGH);
+  digitalWrite(MOTOR_IN2, HIGH);
+  digitalWrite(MOTOR_OUT1, LOW);
+  digitalWrite(MOTOR_OUT2, LOW);
+}
+
+void atras() {
+  digitalWrite(MOTOR_IN1, LOW);
+  digitalWrite(MOTOR_OUT1, HIGH);
+  digitalWrite(MOTOR_IN2, LOW);
+  digitalWrite(MOTOR_OUT2, HIGH);
+}
+
+void vuelta() {
+  digitalWrite(MOTOR_IN1, HIGH);
+  digitalWrite(MOTOR_OUT1, LOW);
+  digitalWrite(MOTOR_IN2, LOW);
+  digitalWrite(MOTOR_OUT2, HIGH);
+}
+
+
+void setup() {
+  Serial.begin(9600);
+
+  pinMode(S0, OUTPUT);
+  pinMode(S1, OUTPUT);
+  pinMode(S2, OUTPUT);
+  pinMode(S3, OUTPUT);
+  pinMode(OUT, INPUT);
+
+  pinMode(MOTOR_IN1, OUTPUT);
+  pinMode(MOTOR_OUT1, OUTPUT);
+  pinMode(MOTOR_IN2, OUTPUT);
+  pinMode(MOTOR_OUT2, OUTPUT);
+
+
+  // Escalado de frecuencia 20%
+  digitalWrite(S0, HIGH);
+  digitalWrite(S1, LOW);
+
+  Serial.println("TCS3200 Normalizado");
+}
+
+int leerColor(bool s2, bool s3) {
+  digitalWrite(S2, s2);
+  digitalWrite(S3, s3);
+  delay(100);
+  return pulseIn(OUT, LOW);
+}
+
+void loop() {
+
+  // 🔴 ROJO
+  red = leerColor(LOW, LOW);
+
+  // 🔵 AZUL
+  blue = leerColor(LOW, HIGH);
+
+  // 🟢 VERDE
+  green = leerColor(HIGH, HIGH);
+
+  // 📊 Normalización
+  float sum = red + green + blue;
+
+  Rn = (red * 100.0) / sum;
+  Gn = (green * 100.0) / sum;
+  Bn = (blue * 100.0) / sum;
+
+  // 📟 Mostrar valores crudos
+  Serial.print("R: ");
+  Serial.print(red);
+  Serial.print(" G: ");
+  Serial.print(green);
+  Serial.print(" B: ");
+  Serial.print(blue);
+
+  Serial.print("   ||   ");
+
+  // 📟 Mostrar normalizados
+  Serial.print("Rn: ");
+  Serial.print(Rn);
+  Serial.print("%  Gn: ");
+  Serial.print(Gn);
+  Serial.print("%  Bn: ");
+  Serial.print(Bn);
+  Serial.println("%");
+
+  delay(500);
+
+  if (Rn < Gn && Rn < Bn){
+    adelante();
+    delay(500);
+  }
+  else if (Gn < Bn && Rn < Bn) {
+    vuelta();
+    delay(500);
+  }
+  //else if (Bn < Rn && Bn < Gn) {
+    //atras();
+    //delay(500);
+  //}
+}
