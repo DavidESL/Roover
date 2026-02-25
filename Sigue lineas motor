@@ -11,8 +11,6 @@
 #define SEN1 14
 #define SEN2 27
 
-
-
 // -------------------- VARIABLES --------------------
 volatile int sread1 = 0;
 volatile int sread2 = 0;
@@ -28,9 +26,9 @@ void taskRGB(void *pvParameters);
 // -------------------- FUNCIONES DE MOVIMIENTO --------------------
 void adelante() {
   digitalWrite(MOTOR_IN1, HIGH);
-  digitalWrite(MOTOR_IN2, LOW);
-  digitalWrite(MOTOR_IN3, HIGH);
-  digitalWrite(MOTOR_IN4, LOW);
+  digitalWrite(MOTOR_IN2, HIGH);
+  digitalWrite(MOTOR_OUT1, LOW);
+  digitalWrite(MOTOR_OUT2, LOW);
 }
 
 void atras() {
@@ -95,7 +93,7 @@ void taskControlMotor(void *pvParameters) {
         xSemaphoreGive(xMotorSemaphore);
       }
 
-      vTaskDelay(pdMS_TO_TICKS(600));
+      vTaskDelay(pdMS_TO_TICKS(200));
     }
     else {
       if (xSemaphoreTake(xMotorSemaphore, pdMS_TO_TICKS(10)) == pdTRUE) {
