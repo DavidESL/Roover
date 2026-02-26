@@ -17,6 +17,9 @@
 #define S3 2
 #define OUT 4
 
+#define LEDR 23
+#define LEDA 22
+
 // -------------------- VARIABLES --------------------
 volatile int sread1 = 0;
 volatile int sread2 = 0;
@@ -77,6 +80,8 @@ void setup() {
   digitalWrite(S0, HIGH);
   digitalWrite(S1, LOW);
 
+  pinMode(LEDR,OUTPUT);
+  pinMode(LEDA, OUTPUT);
 
   xMotorSemaphore = xSemaphoreCreateMutex();
 
@@ -182,14 +187,20 @@ void taskRGB(void *pvParameters) {
 
   delay(500);
 
-    if (Rn < Gn && Rn < Bn){
-      atras();
+    if (Rn < Gn && Rn < Bn && Bn < Gn){
+      digitalWrite(LEDR, HIGH);
+      //atras();
       delay(600);
     }
     else if (Gn < Bn && Rn < Bn) {
-      vuelta();
+      digitalWrite(LEDA, HIGH);
+      //vuelta();
       delay(500);
-  }
+    }
+    else {
+      digitalWrite(LEDR, LOW);
+      digitalWrite(LEDA, LOW);
+    }
     vTaskDelay(pdMS_TO_TICKS(50));
   }
 }
