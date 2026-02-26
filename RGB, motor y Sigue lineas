@@ -1,0 +1,195 @@
+#include <Arduino.h>
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
+#include <freertos/semphr.h>
+
+// -------------------- PINES --------------------
+#define MOTOR_IN1 25
+#define MOTOR_OUT1 26
+#define MOTOR_IN2 12
+#define MOTOR_OUT2 13
+#define SEN1 14
+#define SEN2 27
+
+#define S0 19
+#define S1 18
+#define S2 15
+#define S3 2
+#define OUT 4
+
+// -------------------- VARIABLES --------------------
+volatile int sread1 = 0;
+volatile int sread2 = 0;
+
+int red = 0;
+int green = 0;
+int blue = 0;
+
+float Rn, Gn, Bn;
+
+
+SemaphoreHandle_t xMotorSemaphore;
+
+// -------------------- PROTOTIPOS --------------------
+void taskControlMotor(void *pvParameters);
+void taskRGB(void *pvParameters);
+
+// -------------------- FUNCIONES DE MOVIMIENTO --------------------
+void adelante() {
+  digitalWrite(MOTOR_IN1, HIGH);
+  digitalWrite(MOTOR_IN2, HIGH);
+  digitalWrite(MOTOR_OUT1, LOW);
+  digitalWrite(MOTOR_OUT2, LOW);
+}
+
+void atras() {
+  digitalWrite(MOTOR_IN1, LOW);
+  digitalWrite(MOTOR_OUT1, HIGH);
+  digitalWrite(MOTOR_IN2, LOW);
+  digitalWrite(MOTOR_OUT2, HIGH);
+}
+
+void vuelta() {
+  digitalWrite(MOTOR_IN1, HIGH);
+  digitalWrite(MOTOR_OUT1, LOW);
+  digitalWrite(MOTOR_IN2, LOW);
+  digitalWrite(MOTOR_OUT2, HIGH);
+}
+
+// -------------------- SETUP --------------------
+void setup() {
+  Serial.begin(9600);
+
+  pinMode(MOTOR_IN1, OUTPUT);
+  pinMode(MOTOR_OUT1, OUTPUT);
+  pinMode(MOTOR_IN2, OUTPUT);
+  pinMode(MOTOR_OUT2, OUTPUT);
+
+  pinMode(SEN1, INPUT);
+  pinMode(SEN2, INPUT);
+
+  pinMode(S0, OUTPUT);
+  pinMode(S1, OUTPUT);
+  pinMode(S2, OUTPUT);
+  pinMode(S3, OUTPUT);
+  pinMode(OUT, INPUT);
+
+  digitalWrite(S0, HIGH);
+  digitalWrite(S1, LOW);
+
+
+  xMotorSemaphore = xSemaphoreCreateMutex();
+
+  // Tarea sensores de línea (prioridad mayor)
+  xTaskCreate(taskControlMotor, "ControlMotor", 5000, NULL, 2, NULL);
+
+  // Tarea futura RGB (prioridad menor por ahora)
+  xTaskCreate(taskRGB, "ControlRGB", 5000, NULL, 1, NULL);
+
+  delay(2000);
+}
+
+int leerColor(bool s2, bool s3) {
+  digitalWrite(S2, s2);
+  digitalWrite(S3, s3);
+  delay(100);
+  return pulseIn(OUT, LOW);
+}
+
+
+void loop() {
+  vTaskDelay(portMAX_DELAY);
+}
+
+// -------------------- TAREA 1: CONTROL DE LINEA --------------------
+void taskControlMotor(void *pvParameters) {
+
+  while (1) {
+
+    sread1 = digitalRead(SEN1);
+    sread2 = digitalRead(SEN2);
+
+    if (sread1 == 1 || sread2 == 1) {
+
+      if (xSemaphoreTake(xMotorSemaphore, pdMS_TO_TICKS(100)) == pdTRUE) {
+        atras();
+        xSemaphoreGive(xMotorSemaphore);
+      }
+
+      vTaskDelay(pdMS_TO_TICKS(300));
+
+      if (xSemaphoreTake(xMotorSemaphore, pdMS_TO_TICKS(100)) == pdTRUE) {
+        vuelta();
+        xSemaphoreGive(xMotorSemaphore);
+      }
+
+      vTaskDelay(pdMS_TO_TICKS(200));
+    }
+    else {
+      if (xSemaphoreTake(xMotorSemaphore, pdMS_TO_TICKS(10)) == pdTRUE) {
+        adelante();
+        xSemaphoreGive(xMotorSemaphore);
+      }
+    }
+
+    vTaskDelay(pdMS_TO_TICKS(20));
+  }
+}
+
+// -------------------- TAREA 2: DETECCION RGB (FUTURA) --------------------
+void taskRGB(void *pvParameters) {
+
+  while (1) {
+
+    // =========================================
+    // Aqui va la tarea de deteccion RGB
+    // =========================================
+
+
+      // 🔴 ROJO
+    red = leerColor(LOW, LOW);
+
+    // 🔵 AZUL
+    blue = leerColor(LOW, HIGH);
+
+    // 🟢 VERDE
+    green = leerColor(HIGH, HIGH);
+
+    // 📊 Normalización
+    float sum = red + green + blue;
+
+    Rn = (red * 100.0) / sum;
+    Gn = (green * 100.0) / sum;
+    Bn = (blue * 100.0) / sum;
+
+      Serial.print("R: ");
+  Serial.print(red);
+  Serial.print(" G: ");
+  Serial.print(green);
+  Serial.print(" B: ");
+  Serial.print(blue);
+
+  Serial.print("   ||   ");
+
+  // 📟 Mostrar normalizados
+  Serial.print("Rn: ");
+  Serial.print(Rn);
+  Serial.print("%  Gn: ");
+  Serial.print(Gn);
+  Serial.print("%  Bn: ");
+  Serial.print(Bn);
+  Serial.println("%");
+
+  delay(500);
+
+    if (Rn < Gn && Rn < Bn){
+      atras();
+      delay(600);
+    }
+    else if (Gn < Bn && Rn < Bn) {
+      vuelta();
+      delay(500);
+  }
+    vTaskDelay(pdMS_TO_TICKS(50));
+  }
+}
