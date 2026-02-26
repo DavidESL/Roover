@@ -1,9 +1,9 @@
 // Pines definidos por ti
-#define S0 4
-#define S1 5
-#define S2 6
-#define S3 7
-#define OUT 13
+#define S0 19
+#define S1 18
+#define S2 15
+#define S3 2
+#define OUT 4
 
 int red = 0;
 int green = 0;
@@ -73,3 +73,4 @@ void loop() {
 
   delay(500);
 }
+
